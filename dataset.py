@@ -1,5 +1,6 @@
 import os
 import torch
+import pickle
 from torch.utils.data import Dataset as TorchDataset
 from torchvision import transforms
 from PIL import Image
@@ -8,7 +9,7 @@ import numpy as np
 from enums.config import GlobalValues
 
 class Dataset(TorchDataset):
-    def __init__(self):
+    def __init__(self,):
         self.transform_pipeline = transforms.Compose([
             transforms.Grayscale(num_output_channels=1),
             transforms.Resize(GlobalValues.IMAGE_SIZE.value),
@@ -20,11 +21,32 @@ class Dataset(TorchDataset):
         self.ck_root_dir = GlobalValues.CK_DIR.value
         self.samples = []
         self.classes = []
-        self._load_all_datasets()
+        self.cache_file = GlobalValues.DATASET_CAHCE_FILE.value
+        if os.path.exists(self.cache_file):
+            print(f"Loading dataset samples from cache ({self.cache_file})...", flush=True)
+            with open(self.cache_file, GlobalValues.RB.value) as f:
+                self.samples = pickle.load(f)
+            print(f"-> Sucessfully loaded {len(self.samples)} samples from cache (Skipped disk scan).")
+        else:
+            self._load_all_datasets()
+            self._save_cache()
+
+
+    def _save_cache(self):
+        """
+        Oluşturulan samples listesini sonraki çalıştırmalar için diske kaydeder
+        """
+        try:
+            print(f"Saving dataset cache to {self.cache_file}...", flush=True)
+            with open(self.cache_file, GlobalValues.WB.value) as f:
+                pickle.dump(self.samples, f)
+            print("-> Cache saved successfully.", flush=True)
+        except Exception as e:
+            print(f"Could not save cache: {e}")
 
     def _folder_FER_Affect_dataset(self, root_dir):
         """
-        Klasör yapısında olan Fer2013 veri seti için kullanılır
+        Klasör yapısında olan Fer2013 ve AffectNet veri seti için kullanılır
         """
         if root_dir and os.path.exists(root_dir):
             check_dirs = set()
