@@ -10,7 +10,8 @@ import numpy as np
 from enums.config import GlobalValues
 
 class Dataset(TorchDataset):
-    def __init__(self,):
+    def __init__(self, split=GlobalValues.TRAIN.value):
+        self.split = split
         self.transform_pipeline = transforms.Compose([
             transforms.Grayscale(num_output_channels=1),
             transforms.Resize(GlobalValues.IMAGE_SIZE.value),
@@ -18,89 +19,158 @@ class Dataset(TorchDataset):
             transforms.Normalize(mean=[0.5], std=[0.5])
         ])
         self.fer_root_dir = GlobalValues.FER2013_DIR.value
+        self.fer_train_dir = GlobalValues.FER2013_TRAIN_DIR.value
+        self.fer_valid_dir = GlobalValues.FER2013_VALID_DIR.value
+        self.fer_test_dir = GlobalValues.FER2013_TEST_DIR.value
         self.ck_root_csv = GlobalValues.CK_CSV.value
+        self.ck_root_dir = GlobalValues.CK_DIR.value
+        self.ck_train_dir = GlobalValues.CK_TRAIN_DIR.value
+        self.ck_valid_dir = GlobalValues.CK_VALID_DIR.value
+        self.ck_test_dir = GlobalValues.CK_TEST_DIR.value
         self.affect_root_dir = GlobalValues.AFFETCTNET_DIR.value
         self.affect_train_dir = GlobalValues.AFFETCTNET_TRAIN_DIR.value
         self.affect_valid_dir = GlobalValues.AFFETCTNET_VALIDATION_DIR.value
         self.affect_test_dir = GlobalValues.AFFETCTNET_TEST_DIR.value
+        self.train_samples = []
+        self.valid_samples = []
+        self.test_samples = []
         self.samples = []
-        self.classes = []
-        self.cache_file = GlobalValues.DATASET_CAHCE_FILE.value
-        self._convert_ck_csv_to_images()
-        self._convert_affectnet_categorize_images(self.affect_train_dir)
-        self._convert_affectnet_categorize_images(self.affect_valid_dir)
-        self._convert_affectnet_categorize_images(self.affect_test_dir)
-        """
+        self.train_cache_file = GlobalValues.DATASET_TRAIN_CAHCE_FILE.value
+        self.valid_cache_file = GlobalValues.DATASET_VALID_CAHCE_FILE.value
+        self.test_cache_file = GlobalValues.DATASET_TEST_CAHCE_FILE.value
+        self.cache_file = None
+        if not os.path.exists(self.train_cache_file) or not os.path.exists(self.valid_cache_file) or not os.path.exists(self.test_cache_file):
+            self._load_all_datasets()
+            self._save_cache()    
+        if self.split == GlobalValues.TRAIN.value:
+            self.cache_file = GlobalValues.DATASET_TRAIN_CAHCE_FILE.value
+        elif self.split == GlobalValues.VALID.value:
+            self.cache_file = GlobalValues.DATASET_VALID_CAHCE_FILE.value
+        elif self.split == GlobalValues.TEST.value:
+            self.cache_file = GlobalValues.DATASET_TEST_CAHCE_FILE.value
+        else:
+            raise ValueError(f"Unvalid Split Value: {self.split}. 'train', 'valid' and 'test' must be used.")
         if os.path.exists(self.cache_file):
-            print(f"Loading dataset samples from cache ({self.cache_file})...", flush=True)
+            print(f"Loading {self.split} dataset samples from cache ({self.cache_file})...", flush=True)
             with open(self.cache_file, GlobalValues.RB.value) as f:
                 self.samples = pickle.load(f)
-            print(f"-> Sucessfully loaded {len(self.samples)} samples from cache (Skipped disk scan).")
+            print(f"--> Successfully loaded {len(self.samples)} {self.split} samples from cache (Skipped disk scan).")
         else:
+            print(f"Cache file ({self.cache_file}) not found! Starting full disk scan...", flush=True)
             self._load_all_datasets()
-            self._save_cache()
-        """
-
+            self._save_cache()            
+            if self.split == GlobalValues.TRAIN.value:
+                self.samples = self.train_samples
+            elif self.split == GlobalValues.VALID.value:
+                self.samples = self.valid_samples
+            elif self.split == GlobalValues.TEST.value:
+                self.samples = self.test_samples
 
     def _save_cache(self):
         """
         Oluşturulan samples listesini sonraki çalıştırmalar için diske kaydeder
         """
         try:
-            print(f"Saving dataset cache to {self.cache_file}...", flush=True)
-            with open(self.cache_file, GlobalValues.WB.value) as f:
-                pickle.dump(self.samples, f)
-            print("-> Cache saved successfully.", flush=True)
+            if self.split == GlobalValues.TRAIN.value:
+                print(f"Saving train dataset cache to {self.train_cache_file}...", flush=True)
+                with open(self.train_cache_file, GlobalValues.WB.value) as f:
+                    pickle.dump(self.train_samples, f)
+                print("-> Train Cache saved successfully.", flush=True)
+            elif self.split == GlobalValues.VALID.value:
+                print(f"Saving valid dataset cache to {self.valid_cache_file}...", flush=True)
+                with open(self.valid_cache_file, GlobalValues.WB.value) as f:
+                    pickle.dump(self.valid_samples, f)
+                print("-> Valid Cache saved successfully.", flush=True)
+            elif self.split == GlobalValues.TEST.value:
+                print(f"Saving test dataset cache to {self.test_cache_file}...", flush=True)
+                with open(self.test_cache_file, GlobalValues.WB.value) as f:
+                    pickle.dump(self.test_samples, f)
+                print("-> Test Cache saved successfully.", flush=True)
         except Exception as e:
-            print(f"Could not save cache: {e}")
+            print(f"Could not save cache samples. Error: {e}")      
 
     def _folder_dataset(self, root_dir):
         """
-        Klasör yapısında olan Fer2013 veri seti için kullanılır
+        Klasör yapısını dinamik olarak algılayan ve FER2013, CK+ gibi 
+        farklı hiyerarşilere uyum sağlayan genel veri yükleyici. 
+        3 tane .pickle formatı  train-valid-test olarak oluşturulur.
+        Böylece her seferinde yükleme için I/O işlemi gerekmez.
+        Not: Bu işlemden önce veri setlerinin train-valid-test olarak duygu klasörlerinde toplandığına emin olunmalı.
         """
-        if root_dir and os.path.exists(root_dir):
-            check_dirs = set()
-            for split in [GlobalValues.TRAIN.value, GlobalValues.TEST.value, GlobalValues.VALID.value]:
-                split_path = os.path.join(root_dir, split)
-                target_dir = split_path if os.path.exists(split_path) else root_dir
-                if target_dir in check_dirs:
-                    continue
-                check_dirs.add(target_dir)
-                if os.path.exists(target_dir):
-                    subdirs = sorted(os.listdir(target_dir))
-                    for class_name in subdirs:
-                        clean_name = class_name.lower().strip()
-                        if clean_name in GlobalValues.emotion_to_idx():
-                            class_idx = GlobalValues.emotion_to_idx()[clean_name]
-                            class_path = os.path.join(target_dir, class_name)
-                            if os.path.isdir(class_path):
-                                for img_name in os.listdir(class_path):
-                                    img_path = os.path.join(class_path, img_name)
-                                    if img_path.lower().endswith((GlobalValues.PNG.value, GlobalValues.JPG.value, GlobalValues.JPEG.value)):
-                                        self.samples.append((GlobalValues.PATH.value, img_path, class_idx))
+        if not root_dir or not os.path.exists(root_dir):
+            return
+        emotion_map = GlobalValues.emotion_to_idx()
+        target_dir = root_dir
+        if not os.path.exists(target_dir) or not os.path.isdir(target_dir):
+            return         
+        for class_name in os.listdir(target_dir):
+            clean_name = class_name.lower().strip()    
+            if clean_name in emotion_map:
+                class_idx = emotion_map[clean_name]
+                class_path = os.path.join(target_dir, class_name)            
+                if os.path.isdir(class_path):
+                    for img_name in os.listdir(class_path):
+                        img_path = os.path.join(class_path, img_name)
+                        if img_path.lower().endswith((GlobalValues.PNG.value, GlobalValues.JPG.value, GlobalValues.JPEG.value)):
+                            match self.split:
+                                case GlobalValues.TRAIN.value:
+                                    self.train_samples.append((GlobalValues.PATH.value, img_path, class_idx))
+                                case GlobalValues.VALID.value:
+                                    self.valid_samples.append((GlobalValues.PATH.value, img_path, class_idx))
+                                case GlobalValues.TEST.value:
+                                    self.test_samples.append((GlobalValues.PATH.value, img_path, class_idx))
 
+    def _load_all_datasets(self):
+        """
+        Veri Setlerini yükler ve aktif split'e göre loglar.
+        """
+        try:
+            print(f"Datasets are loading for split: {self.split}...", flush=True)
+            
+            # Fer2013 yükleme
+            if self.fer_root_dir and self.fer_train_dir and self.fer_valid_dir and self.fer_test_dir:
+                if self.split == GlobalValues.TRAIN.value:
+                    self._folder_dataset(self.fer_train_dir)
+                elif self.split == GlobalValues.VALID.value:
+                    self._folder_dataset(self.fer_valid_dir)
+                elif self.split == GlobalValues.TEST.value:
+                    self._folder_dataset(self.fer_test_dir)
+                print(f"-> Fer2013 dataset ({self.split}) loaded.")
 
-    def _folder_AFFECTNET_dataset(self, root_dir):
-        emotion_map = GlobalValues.EMOTION.value
-        for split_dir_name in os.listdir(root_dir):
-            split_path = os.path.join(root_dir, split_dir_name)
-            if os.path.isdir(split_path):
-                # Bu split altındaki klasörleri tara
-                inner_subdirs = os.listdir(split_path)
-                for class_name in inner_subdirs:
-                    clean_name = class_name.lower().strip()
-                    if clean_name in emotion_map:
-                        class_idx = emotion_map[clean_name]
-                        class_path = os.path.join(split_path, class_name)
-                        if os.path.isdir(class_path):
-                            for img_name in os.listdir(class_path):
-                                img_path = os.path.join(class_path, img_name)
-                                if img_path.lower().endswith(('.png', '.jpg', '.jpeg')):
-                                    self.samples.append(("path", img_path, class_idx))
+            # AffectNet yükleme
+            if self.affect_root_dir:
+                if self.split == GlobalValues.TRAIN.value and self.affect_train_dir:
+                    self._folder_dataset(self.affect_train_dir)
+                elif self.split == GlobalValues.VALID.value and self.affect_valid_dir:
+                    self._folder_dataset(self.affect_valid_dir)
+                elif self.split == GlobalValues.TEST.value and self.affect_test_dir:
+                    self._folder_dataset(self.affect_test_dir)
+                print(f"-> AffectNet dataset ({self.split}) loaded.")
 
+            # CK+ yükleme
+            if self.ck_root_dir:
+                if self.split == GlobalValues.TRAIN.value and self.ck_train_dir:
+                    self._folder_dataset(self.ck_train_dir)
+                elif self.split == GlobalValues.VALID.value and self.ck_valid_dir:
+                    self._folder_dataset(self.ck_valid_dir)
+                elif self.split == GlobalValues.TEST.value and self.ck_test_dir:
+                    self._folder_dataset(self.ck_test_dir)
+                print(f"-> CK+ dataset ({self.split}) loaded.")
+
+            # Sonuçları aktif split'e göre yazdır
+            if self.split == GlobalValues.TRAIN.value:
+                print(f"-> Total Loaded Train Samples: {len(self.train_samples)}", flush=True)
+            elif self.split == GlobalValues.VALID.value:
+                print(f"-> Total Loaded Valid Samples: {len(self.valid_samples)}", flush=True)
+            elif self.split == GlobalValues.TEST.value:
+                print(f"-> Total Loaded Test Samples: {len(self.test_samples)}", flush=True)
+        
+        except Exception as e:
+            print(f"Load All Datasets Critical Error: {e}", flush=True)
+   
     def _csv_ck_dataset(self, csv_path):
         """
-        CK+ veri setinin CSV tabanlı pikseleri için kullanılır
+        CK+ veri setinin CSV tabanlı pikseleri için kullanılır. 48x48'lik görseller elde edilir.
         """   
         if csv_path and os.path.exists(csv_path):
             df = pd.read_csv(csv_path)
@@ -113,26 +183,12 @@ class Dataset(TorchDataset):
                     self.samples.append((GlobalValues.TENSOR.value, pil_img, label))
                 except Exception as e:
                     continue
-
-
-    def _load_all_datasets(self):
-        """
-        Veri Setlerini yükler.
-        """
-        try:
-            print(f"Datasets are loading...", flush=True)
-            if self.fer_root_dir:
-                self._folder_dataset(self.fer_root_dir)
-                print(f"-> Fer2013 dataset upload. Total Sample: {len(self.samples)}")
-        
-        except Exception as e:
-            print(f"Load All Datasets Critical Error: {e}", flush=True)
-
-      
-         
-
-
+ 
     def _convert_ck_csv_to_images(self):
+        """
+        CK+ veri setinde görseller pikselden sonra karmaşık durduğundan duygu klasörlerine göre sınıflar.
+        """
+        
         idx_to_emotion_map = GlobalValues.idx_to_emotion()
         base_dir = os.path.dirname(GlobalValues.CK_CSV.value)
         if not os.path.exists(GlobalValues.CK_CSV.value):
@@ -159,8 +215,11 @@ class Dataset(TorchDataset):
                 continue
         print("-> CK+ convert process is done.", flush=True)
 
-
     def _convert_affectnet_categorize_images(self, root_dir):
+        """
+        AffectNet veri yapısında label - images olark ayrılmıştır. Aynı şekilde label içerisindeki .txt dosyaları ile eşleştirerek
+        duygu klasölerleri altında sınıflandırılmasını sağlar.
+        """
         emotion_to_idx = GlobalValues.affectnet_emotion_to_idx()
         base_dir = os.path.dirname(root_dir)
         clean_root = root_dir.strip().rstrip("/\\")
@@ -188,15 +247,11 @@ class Dataset(TorchDataset):
                 try:
                     with open(txt_path, GlobalValues.R.value) as f:
                         line = f.readline().strip()
-                        print(f"line => {line}")
                         if not line:
                             continue
                         parts = line.split()
                         kaggle_label_idx = int(parts[0])
-                        print(f"kaggle_label_idx => {kaggle_label_idx}", flush=True)
-
                         emotion_name = emotion_to_idx.get(kaggle_label_idx, None)
-                        print(f"emotion_to_idx => {emotion_to_idx}", flush=True)
                         if emotion_name:
                             target_class_dir = f"{clean_root}/{emotion_name}"
                             os.makedirs(target_class_dir, exist_ok=True)
@@ -213,7 +268,6 @@ class Dataset(TorchDataset):
                     
         print(f"-> AffectNet classification is successful: {success_count}, Skipped: {skipped_count}", flush=True)
                                 
-
     def __len__(self):
         return len(self.samples)
 

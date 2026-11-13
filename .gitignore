@@ -1,1 +1,10 @@
+# Python cache dosyaları
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Dataset ve Model Cache / Pickle dosyaları
 dataset/
+*.pkl
+dataset_*.pkl
+cache/

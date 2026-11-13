@@ -15,7 +15,13 @@ class GlobalValues(Enum):
     SAD = "sad"
     SUPRISE = "suprise"
     FER2013_DIR = r"dataset/Fer2013_Dataset"
+    FER2013_TRAIN_DIR = r"dataset/Fer2013_Dataset/train"
+    FER2013_VALID_DIR = r"dataset/Fer2013_Dataset/valid"
+    FER2013_TEST_DIR = r"dataset/Fer2013_Dataset/test" 
     CK_DIR = r"dataset/CK+_Dataset"
+    CK_TRAIN_DIR = r"dataset/CK+_Dataset/train"
+    CK_VALID_DIR = r"dataset/CK+_Dataset/valid"
+    CK_TEST_DIR = r"dataset/CK+_Dataset/test"
     CK_CSV = r"dataset/CK+_Dataset/ckextended.csv"
     AFFETCTNET_DIR = r"dataset/AffectNet_Dataset"
     AFFETCTNET_TRAIN_DIR = r"dataset/AffectNet_Dataset/train"
@@ -33,13 +39,18 @@ class GlobalValues(Enum):
     EMOTION = "emotion"
     TENSOR = "tensor"
     PIXELS = "pixels"
-    DATASET_CAHCE_FILE = "dataset_cache.pkl"
+    DATASET_TRAIN_CAHCE_FILE = "dataset_train_cache.pkl"
+    DATASET_VALID_CAHCE_FILE = "dataset_valid_cache.pkl"
+    DATASET_TEST_CAHCE_FILE = "dataset_test_cache.pkl"
     RB = "rb"
     WB = "wb"
     MIN = "min"
-    SAVE_PATH = "best_fer_model.pth"
+    SAVE_PATH = "best_model.pth"
     L = "L"
     R = "r"
+    MODE = '--mode'
+    CLEAN = 'clean'
+    MAIN_FILE = "main.py"
 
 
     @classmethod
