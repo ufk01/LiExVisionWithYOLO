@@ -12,12 +12,24 @@ from enums.config import GlobalValues
 class Dataset(TorchDataset):
     def __init__(self, split=GlobalValues.TRAIN.value):
         self.split = split
-        self.transform_pipeline = transforms.Compose([
-            transforms.Grayscale(num_output_channels=1),
-            transforms.Resize(GlobalValues.IMAGE_SIZE.value),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.5], std=[0.5])
-        ])
+        if self.split == GlobalValues.TRAIN.value:
+            self.transform_pipeline = transforms.Compose([
+                transforms.Grayscale(num_output_channels=1),
+                transforms.Resize(GlobalValues.IMAGE_SIZE.value),
+                # Augmentasyonlar (Sadece Train için aktif!)
+                transforms.RandomHorizontalFlip(p=0.5),
+                transforms.RandomRotation(degrees=15),
+                transforms.ColorJitter(brightness=0.2, contrast=0.2),
+                transforms.ToTensor(),
+                transforms.Normalize(mean=[0.5], std=[0.5])
+            ])
+        else:
+            self.transform_pipeline = transforms.Compose([
+                transforms.Grayscale(num_output_channels=1),
+                transforms.Resize(GlobalValues.IMAGE_SIZE.value),
+                transforms.ToTensor(),
+                transforms.Normalize(mean=[0.5], std=[0.5])
+            ])
         self.fer_root_dir = GlobalValues.FER2013_DIR.value
         self.fer_train_dir = GlobalValues.FER2013_TRAIN_DIR.value
         self.fer_valid_dir = GlobalValues.FER2013_VALID_DIR.value
