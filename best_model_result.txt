@@ -1,0 +1,40 @@
+Starting training loop...
+Epoch [1/25] | Train Loss: 1.7866 | Train Acc: 28.08% | Val Loss: 1.6248 | Val Acc: 37.42%
+--> Saved new best model with Validation Accuracy: 37.42%
+Epoch [2/25] | Train Loss: 1.4115 | Train Acc: 45.97% | Val Loss: 1.7207 | Val Acc: 35.33%
+Epoch [3/25] | Train Loss: 1.2752 | Train Acc: 51.82% | Val Loss: 1.1933 | Val Acc: 54.68%
+--> Saved new best model with Validation Accuracy: 54.68%
+Epoch [4/25] | Train Loss: 1.2069 | Train Acc: 54.56% | Val Loss: 1.1745 | Val Acc: 55.72%
+--> Saved new best model with Validation Accuracy: 55.72%
+Epoch [5/25] | Train Loss: 1.1522 | Train Acc: 56.50% | Val Loss: 1.1473 | Val Acc: 56.81%
+--> Saved new best model with Validation Accuracy: 56.81%
+Epoch [6/25] | Train Loss: 1.1102 | Train Acc: 58.25% | Val Loss: 1.0337 | Val Acc: 61.55%
+--> Saved new best model with Validation Accuracy: 61.55%
+Epoch [7/25] | Train Loss: 1.0797 | Train Acc: 59.25% | Val Loss: 1.1121 | Val Acc: 59.91%
+Epoch [8/25] | Train Loss: 1.0475 | Train Acc: 60.53% | Val Loss: 0.9701 | Val Acc: 63.23%
+--> Saved new best model with Validation Accuracy: 63.23%
+Epoch [9/25] | Train Loss: 1.0303 | Train Acc: 61.40% | Val Loss: 1.0199 | Val Acc: 61.83%
+Epoch [10/25] | Train Loss: 1.0076 | Train Acc: 62.38% | Val Loss: 0.9938 | Val Acc: 63.18%
+Epoch [11/25] | Train Loss: 0.9903 | Train Acc: 63.03% | Val Loss: 0.9907 | Val Acc: 63.25%
+--> Saved new best model with Validation Accuracy: 63.25%
+Epoch [12/25] | Train Loss: 0.9711 | Train Acc: 63.84% | Val Loss: 1.1848 | Val Acc: 58.16%
+Epoch [13/25] | Train Loss: 0.9127 | Train Acc: 65.78% | Val Loss: 0.8953 | Val Acc: 66.39%
+--> Saved new best model with Validation Accuracy: 66.39%
+Epoch [14/25] | Train Loss: 0.8924 | Train Acc: 66.77% | Val Loss: 0.9223 | Val Acc: 65.93%
+Epoch [15/25] | Train Loss: 0.8757 | Train Acc: 67.74% | Val Loss: 0.9031 | Val Acc: 66.12%
+Epoch [16/25] | Train Loss: 0.8653 | Train Acc: 67.74% | Val Loss: 0.8960 | Val Acc: 66.60%
+--> Saved new best model with Validation Accuracy: 66.60%
+Epoch [17/25] | Train Loss: 0.8515 | Train Acc: 68.31% | Val Loss: 0.9368 | Val Acc: 65.31%
+Epoch [18/25] | Train Loss: 0.8121 | Train Acc: 70.03% | Val Loss: 0.8595 | Val Acc: 68.01%
+--> Saved new best model with Validation Accuracy: 68.01%
+Epoch [19/25] | Train Loss: 0.7977 | Train Acc: 70.56% | Val Loss: 0.8722 | Val Acc: 67.55%
+Epoch [20/25] | Train Loss: 0.7875 | Train Acc: 70.91% | Val Loss: 0.8754 | Val Acc: 67.68%
+Epoch [21/25] | Train Loss: 0.7759 | Train Acc: 71.17% | Val Loss: 0.8712 | Val Acc: 67.52%
+Epoch [22/25] | Train Loss: 0.7733 | Train Acc: 71.46% | Val Loss: 0.8803 | Val Acc: 67.82%
+Epoch [23/25] | Train Loss: 0.7534 | Train Acc: 71.96% | Val Loss: 0.8604 | Val Acc: 68.43%
+--> Saved new best model with Validation Accuracy: 68.43%
+Epoch [24/25] | Train Loss: 0.7389 | Train Acc: 72.59% | Val Loss: 0.8603 | Val Acc: 68.43%
+Epoch [25/25] | Train Loss: 0.7382 | Train Acc: 72.99% | Val Loss: 0.8661 | Val Acc: 68.60%
+--> Saved new best model with Validation Accuracy: 68.60%
+Training completed! Best Validation Accuracy: 68.60%
+--> Train process is finished.
