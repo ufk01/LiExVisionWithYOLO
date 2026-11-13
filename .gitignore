@@ -6,5 +6,6 @@ __pycache__/
 # Dataset ve Model Cache / Pickle dosyaları
 dataset/
 *.pkl
+*.pth
 dataset_*.pkl
 cache/
