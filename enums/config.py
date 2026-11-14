@@ -31,6 +31,7 @@ class GlobalValues(Enum):
     TRAIN = "train"
     TEST = "test"
     VALID = "valid"
+    LIVE = "live"
     PNG = ".png"
     JPG = ".jpg"
     JPEG = ".jpeg"
@@ -51,18 +52,18 @@ class GlobalValues(Enum):
     MODE = '--mode'
     CLEAN = 'clean'
     MAIN_FILE = "main.py"
+    YOLO_MODEL_PATH = "yolov8n.pt"
+    ANALYZING = "Analyzing..."
+    WINDOW_NAME = "Live Detection"
 
 
     @classmethod
     def emotion_to_idx(cls):
         return {
-            'angry': 0, 
-            'disgust': 1, 
-            'fear': 2, 
-            'happy': 3, 
-            'sad': 4, 
-            'surprise': 5, 
-            'neutral': 6 
+            'happy': 0, 
+            'sad': 1, 
+            'surprise': 2, 
+            'neutral': 3 
         }
 
     @classmethod
@@ -73,7 +74,7 @@ class GlobalValues(Enum):
     def affectnet_emotion_to_idx(cls):
         return {
             0: 'angry',       
-            1: 'contempt',          
+            1: 'None',          
             2: 'disgust',     
             3: 'fear',        
             4: 'happy',       
@@ -85,4 +86,5 @@ class GlobalValues(Enum):
     @classmethod
     def affectnet_idx_to_emotion(cls):
         return {v: k for k, v in cls.affectnet_emotion_to_idx().items()}
+    
 

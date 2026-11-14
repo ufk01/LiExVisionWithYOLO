@@ -1,4 +1,6 @@
 [tool.poe.tasks]
 train = "python main.py --mode train"
+valid = "python main.py --mode valid"
 test = "python main.py --mode test"
+live = "python main.py --mode live"
 clean = "python -c \"import glob, os; [os.remove(f) for f in glob.glob('*.pkl')]; print('-> Cached pickle files have been cleared.')\""
