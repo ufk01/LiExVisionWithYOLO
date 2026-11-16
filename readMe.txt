@@ -43,4 +43,4 @@ Node.js'deki package.json konforunda, poethepoet kullanarak projeyi şu komutlar
 
 
 - Nuitka DERLEME KOMUT:
-python -m nuitka --standalone --mingw64 --jobs=8 --module-parameter=torch-disable-jit=yes --enable-plugin=no-qt --nofollow-import-to=torch._dynamo --include-data-file=yolov8n.pt=yolov8n.pt --include-data-file=best_model.pth=best_model.pth --output-dir=dist main.py
+python -m nuitka --standalone --mingw64 --jobs=8 --module-parameter=torch-disable-jit=yes --enable-plugin=no-qt --include-data-file=yolov8n.pt=yolov8n.pt --include-data-file=best_model.pth=best_model.pth --output-dir=dist main.py
