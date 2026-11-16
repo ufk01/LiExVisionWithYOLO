@@ -11,7 +11,7 @@ class FaceDetector:
         self.last_update_time = 0
         self.cached_emotion_text = "Analyzing..."
         self.update_interval = 0.1
-        self.prediction_history = deque(maxlen=3)
+        self.prediction_history = deque(maxlen=5)
         
     def detect_faces(self, frame):
         results = self.model(frame, verbose=False, conf=0.7)
@@ -33,12 +33,14 @@ class FaceDetector:
             h, w, _ = frame.shape       
             box_width = x2 - x1
             box_height = y2 - y1
-            padding_x = int(box_width * 0.1)
-            padding_y = int(box_height * 0.1)    
-            startX = max(0, x1 - padding_x)
-            startY = max(0, y1 - padding_y)
-            endX = min(w, x2 + padding_x)
-            endY = min(h, y2 + padding_y)          
+            face_ymin = y1 + int(box_height * 0.01)  
+            face_ymax = y1 + int(box_height * 0.8)  
+            face_xmin = x1 + int(box_width * 0.20)   
+            face_xmax = x2 - int(box_width * 0.20)    
+            startX = max(0, face_xmin)
+            startY = max(0, face_ymin)
+            endX = min(w, face_xmax)
+            endY = min(h, face_ymax)         
             face_crop = frame[startY:endY, startX:endX]
             if face_crop.size == 0:
                 continue     
